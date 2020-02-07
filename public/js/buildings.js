@@ -1,40 +1,48 @@
-const drawBuildings = buildings => {
+const showData = buildings => {
   const toLine = b => `<strong>${b.name}</strong> <i>${b.height}</i>`;
-  document.querySelector("#chart-area").innerHTML = buildings
+  document.querySelector("#chart-data").innerHTML = buildings
     .map(toLine)
     .join("<hr/>");
+};
 
-  const width = 400;
-  const height = 400;
-
-  const container = d3.select("#chart-data");
-  const svg = container
+const drawChart = buildings => {
+  const [width, height] = [400, 400];
+  const svg = d3
+    .select("#chart-area")
     .append("svg")
-    .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
+    .attr("width", width);
 
   const y = d3
     .scaleLinear()
-    .domain([0, _.maxBy(buildings, b => b.height).height])
+    .domain([0, _.maxBy(buildings, "height").height])
     .range([0, height]);
 
-  x = d3
+  const x = d3
     .scaleBand()
     .domain(_.map(buildings, "name"))
     .range([0, width])
     .padding(0.3);
 
-  const rectangles = svg.selectAll("rect").data(buildings);
+  const rects = svg.selectAll("rect").data(buildings);
 
-  const newRectangles = rectangles.enter().append("rect");
-  newRectangles
-    .attr("y", 0)
+  const newRects = rects.enter();
+  newRects
+    .append("rect")
     .attr("x", b => x(b.name))
+    .attr("y", 0)
     .attr("width", x.bandwidth)
-    .attr("height", b => y(b.height));
+    .attr("height", b => y(b.height))
+    .attr("fill", "grey");
+};
+
+const drawBuildings = buildings => {
+  showData(buildings);
+  drawChart(buildings);
 };
 
 const main = () => {
   d3.json("data/buildings.json").then(drawBuildings);
 };
+
 window.onload = main;
