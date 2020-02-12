@@ -1,0 +1,16 @@
+svg {
+  border: 1px solid gray;
+}
+
+.axis-label {
+  text-anchor: middle;
+  font-size: 20px;
+}
+
+.x-axis {
+  text-anchor: end;
+}
+
+.column-names {
+  font-weight: bold;
+}
