@@ -3,5 +3,18 @@ svg {
 }
 
 rect {
-  fill: gray;
+  fill: rgb(99, 102, 104);
+}
+
+.axis-label {
+  text-anchor: middle;
+  font-size: 20px;
+}
+
+.x-axis {
+  text-anchor: start;
+}
+
+.building-names {
+  color: white;
 }
