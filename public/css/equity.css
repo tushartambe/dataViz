@@ -1,0 +1,50 @@
+svg {
+  border: 1px solid gray;
+}
+
+.axis-label {
+  text-anchor: middle;
+  font-size: 20px;
+}
+
+.x-axis text {
+  text-anchor: end;
+  transform: rotate(-40deg);
+  font-weight: bold;
+}
+
+.close {
+  fill: none;
+  stroke: black;
+  stroke-width: 2px;
+}
+
+.smaline {
+  fill: none;
+  stroke: blue;
+  stroke-width: 2px;
+}
+
+#slider {
+  position: relative;
+  height: 30px;
+  width: 50%;
+  background-color: #eeeef5;
+}
+
+#selected-range {
+  width: 100px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.controls {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  display: flex;
+  flex-direction: row;
+}
+
+.controls input[type="number"] {
+  margin-left: 20px;
+}
