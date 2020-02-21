@@ -5,6 +5,8 @@ const margin = { left: 100, right: 10, top: 10, bottom: 150 };
 const width = chartSize.width - margin.left - margin.right;
 const height = chartSize.height - margin.top - margin.bottom;
 
+const r = x => _.round(x);
+
 const initChart = companies => {
     const svg = d3
         .select("#chart-area svg")
@@ -84,6 +86,27 @@ const updateChart = function (quotes, fieldName) {
     d3.select('.smaline').attr("d", smaLine(_.filter(quotes, 'SMA')));
 }
 
+const createTable = function (transactions) {
+    const tr = d3.select("#transactions-table table tbody")
+        .selectAll("tr")
+        .data(transactions)
+        .enter().append("tr");
+
+    const mapTransactionFields = (t, i) => [
+        ++i,
+        t.buy.Date,
+        r(t.buy.Close),
+        r(t.buy.SMA),
+        t.sell.Date,
+        r(t.sell.Close),
+        r(t.sell.SMA),
+        r(t.benefit)
+    ];
+    const td = tr.selectAll("td")
+        .data(mapTransactionFields)
+        .enter().append("td")
+        .text(d => d);
+}
 
 const analyzeData = (quotes) => {
     const first100 = _.take(quotes, 100);
@@ -105,13 +128,78 @@ const analyzeData = (quotes) => {
     return quotes;
 }
 
-const startVisualization = data => {
-    initChart();
-    const analyzedData = analyzeData(data);
-    updateChart(analyzedData);
-    createSlider(analyzedData.slice(0));
+const calculateTransactions = function (quotes) {
 
-};
+    allTransactions = _.reduce(quotes, (transactionsRecord, quote) => {
+        let roundedClose = r(quote.Close);
+        let roundedSMA = r(quote.SMA);
+
+        if (roundedClose > roundedSMA && transactionsRecord.shouldBuy) {
+            transactionsRecord.transactions.push({ "buy": quote });
+            transactionsRecord.shouldBuy = false;
+        }
+        if (roundedClose < roundedSMA && !transactionsRecord.shouldBuy) {
+            _.last(transactionsRecord.transactions)["sell"] = quote;
+            transactionsRecord.shouldBuy = true;
+        }
+        return transactionsRecord;
+    }, { shouldBuy: true, transactions: [] }).transactions;
+
+
+
+    if (!_.last(allTransactions).sell) {
+        _.last(allTransactions).sell = _.last(quotes);
+    }
+
+    console.log(allTransactions);
+    return _.map(allTransactions, ({ buy, sell }) => {
+        const benefit = sell.Close - buy.Close;
+        let verdict = benefit >= 0 ? "win" : "lose";
+        return { buy, sell, "benefit": benefit, "verdict": verdict };
+    })
+}
+
+const showTransactionsSummary = function (transactions) {
+
+    const wins = transactions.filter(t => t.verdict == "win");
+    const loss = transactions.filter(t => t.verdict == "lose");
+
+    const totalTransactions = transactions.length;
+    const totalWins = wins.length;
+    const totalLoss = loss.length;
+
+    const totalWinAmount = _.reduce(wins, (sum, t) => sum + t.benefit, 0);
+    const totalLossAmount = _.reduce(loss, (sum, t) => sum + t.benefit, 0);
+    const winPercentage = (totalWins / totalTransactions) * 100;
+    const averageWinSize = totalWinAmount / totalWins;
+    const averageLossSize = totalLossAmount / totalLoss;
+    const winMultiple = averageWinSize / averageLossSize;
+    const net = _.reduce(transactions, (sum, t) => sum + t.benefit, 0);
+    const expectancy = totalWinAmount / totalTransactions;
+
+    const summary = [
+        { "k": "Total Transactions", "v": totalTransactions },
+        { "k": "Total Wins", "v": totalWins },
+        { "k": "Total Loss", "v": totalLoss },
+        { "k": "Win Percentage %", "v": r(winPercentage) },
+        { "k": "Average Win Size", "v": r(averageWinSize) },
+        { "k": "Average Loss Size", "v": Math.abs(r(averageLossSize)) },
+        { "k": "Win Multiple", "v": r(winMultiple) },
+        { "k": "Net", "v": r(net) },
+        { "k": "Expectancy", "v": r(expectancy) },
+    ]
+
+    const tr = d3.select("#transactions-summary table tbody")
+        .selectAll("tr")
+        .data(summary)
+        .enter().append("tr");
+
+    const td = tr.selectAll("td")
+        .data((t, i) => { return Object.values(t) })
+        .enter().append("td")
+        .text(d => d);
+}
+
 const parseData = ({ Date, Volume, AdjClose, ...numerics }) => {
     _.forEach(numerics, (v, k) => numerics[k] = +v);
     return { Date, time: new window.Date(Date), ...numerics };
@@ -138,6 +226,17 @@ const createSlider = function (quotes) {
         updateChart(quotes.slice(begin, end));
     })
 }
+
+const startVisualization = data => {
+    initChart();
+    const analyzedData = analyzeData(data);
+    const transactions = calculateTransactions(analyzedData.slice(101));
+    createTable(transactions);
+    showTransactionsSummary(transactions);
+    updateChart(analyzedData);
+    createSlider(analyzedData.slice(0));
+
+};
 
 const main = () => {
     d3.csv("data/nifty.csv", parseData).then(startVisualization);

@@ -48,3 +48,18 @@ svg {
 .controls input[type="number"] {
   margin-left: 20px;
 }
+
+.tables {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  font-size: x-small;
+}
+.table-responsive {
+  margin: 20px;
+}
+td,
+th {
+  border: 1px solid black;
+}
