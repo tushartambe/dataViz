@@ -14,11 +14,9 @@ const initChart = companies => {
         .attr("width", chartSize.width);
 
     const g = svg.append("g");
-    g
-        .attr('class', 'time')
-        .attr("transform", `translate(${margin.left},${margin.right})`);
 
-    rects = g.selectAll("rect").data(companies, c => c.Name);
+    g.attr('class', 'time')
+        .attr("transform", `translate(${margin.left},${margin.right})`);
 
     g.append("text")
         .attr("class", "x axis-label")
@@ -58,7 +56,7 @@ const updateChart = function (quotes, fieldName) {
         .domain([fq.time, lq.time])
         .range([0, width]);
 
-    const xAxis = d3.axisBottom(x);
+    const xAxis = d3.axisBottom(x).tickSize(-height);
     svg.select(".x-axis")
         .call(xAxis);
     const minDomain = Math.min(..._.map(quotes, 'Low'), ..._.map(_.filter(quotes, 'SMA'), 'SMA'));
@@ -69,7 +67,7 @@ const updateChart = function (quotes, fieldName) {
         .range([height, 0]);
 
     const yAxis = d3.axisLeft(y)
-        .ticks(15);
+        .ticks(10).tickSize(-width);
 
     svg.select(".y-axis")
         .call(yAxis);
@@ -214,7 +212,8 @@ const createSlider = function (quotes) {
     x = quotes
     const f = _.first(quotes);
     const l = _.last(quotes);
-    window.slider = createD3RangeSlider(f.Index, l.Index, "#slider");
+
+    slider = createD3RangeSlider(f.Index, l.Index, "#slider");
     slider.range(f.Index, l.Index);
 
     showSelectedDates(f.time, l.time);
@@ -231,11 +230,10 @@ const startVisualization = data => {
     initChart();
     const analyzedData = analyzeData(data);
     const transactions = calculateTransactions(analyzedData.slice(101));
+    createSlider(analyzedData.slice(0));
     createTable(transactions);
     showTransactionsSummary(transactions);
     updateChart(analyzedData);
-    createSlider(analyzedData.slice(0));
-
 };
 
 const main = () => {
